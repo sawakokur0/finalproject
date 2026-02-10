@@ -2,7 +2,7 @@ const db = require("../models");
 const User = db.user;
 const jwt = require("jsonwebtoken");
 const bcrypt = require("bcryptjs");
-const nodemailer = require("nodemailer"); // Requirement 7.2
+const nodemailer = require("nodemailer");
 
 // Email Transporter setup
 const transporter = nodemailer.createTransport({
@@ -13,20 +13,20 @@ const transporter = nodemailer.createTransport({
   },
 });
 
-exports.signup = (req, res) => {
+// Используем async/await для регистрации
+exports.signup = async (req, res) => {
   const user = new User({
     username: req.body.username,
     email: req.body.email,
     password: bcrypt.hashSync(req.body.password, 8),
-    role: req.body.role || 'user' // Default to user if not specified
+    role: req.body.role || 'user'
   });
 
-  user.save((err, user) => {
-    if (err) {
-      return res.status(500).send({ message: err });
-    }
+  try {
+    // Сохраняем пользователя (без callback)
+    await user.save();
 
-    // Send Welcome Email
+    // Отправляем письмо (Nodemailer поддерживает callback, здесь менять не нужно)
     const mailOptions = {
       from: process.env.EMAIL_USER,
       to: user.email,
@@ -39,15 +39,24 @@ exports.signup = (req, res) => {
     });
 
     res.send({ message: "User was registered successfully!" });
-  });
+
+  } catch (err) {
+    res.status(500).send({ message: err.message || "Some error occurred while creating the User." });
+  }
 };
 
-exports.signin = (req, res) => {
-  User.findOne({ email: req.body.email }).exec((err, user) => {
-    if (err) return res.status(500).send({ message: err });
-    if (!user) return res.status(404).send({ message: "User Not found." });
+// Используем async/await для входа
+exports.signin = async (req, res) => {
+  try {
+    // Ищем пользователя (без callback)
+    const user = await User.findOne({ email: req.body.email });
+
+    if (!user) {
+      return res.status(404).send({ message: "User Not found." });
+    }
 
     var passwordIsValid = bcrypt.compareSync(req.body.password, user.password);
+
     if (!passwordIsValid) {
       return res.status(401).send({ accessToken: null, message: "Invalid Password!" });
     }
@@ -61,5 +70,8 @@ exports.signin = (req, res) => {
       role: user.role,
       accessToken: token
     });
-  });
+
+  } catch (err) {
+    res.status(500).send({ message: err.message || "Error during signin." });
+  }
 };

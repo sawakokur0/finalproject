@@ -29,7 +29,9 @@ exports.create = (req, res) => {
 // Admin Only: Delete Class
 exports.delete = (req, res) => {
   const id = req.params.id;
-  Class.findByIdAndRemove(id)
+  
+  // В Mongoose 8+ findByIdAndRemove удален, используем findByIdAndDelete
+  Class.findByIdAndDelete(id)
     .then(data => {
       if (!data) res.status(404).send({ message: `Cannot delete Class with id=${id}.` });
       else res.send({ message: "Class was deleted successfully!" });
