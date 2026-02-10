@@ -4,7 +4,6 @@ const jwt = require("jsonwebtoken");
 const bcrypt = require("bcryptjs");
 const nodemailer = require("nodemailer");
 
-// Email Transporter setup
 const transporter = nodemailer.createTransport({
   service: process.env.EMAIL_SERVICE,
   auth: {
@@ -13,7 +12,6 @@ const transporter = nodemailer.createTransport({
   },
 });
 
-// Используем async/await для регистрации
 exports.signup = async (req, res) => {
   const user = new User({
     username: req.body.username,
@@ -23,10 +21,8 @@ exports.signup = async (req, res) => {
   });
 
   try {
-    // Сохраняем пользователя (без callback)
     await user.save();
 
-    // Отправляем письмо (Nodemailer поддерживает callback, здесь менять не нужно)
     const mailOptions = {
       from: process.env.EMAIL_USER,
       to: user.email,
@@ -45,10 +41,8 @@ exports.signup = async (req, res) => {
   }
 };
 
-// Используем async/await для входа
 exports.signin = async (req, res) => {
   try {
-    // Ищем пользователя (без callback)
     const user = await User.findOne({ email: req.body.email });
 
     if (!user) {
@@ -61,7 +55,7 @@ exports.signin = async (req, res) => {
       return res.status(401).send({ accessToken: null, message: "Invalid Password!" });
     }
 
-    var token = jwt.sign({ id: user.id }, process.env.JWT_SECRET, { expiresIn: 86400 }); // 24 hours
+    var token = jwt.sign({ id: user.id }, process.env.JWT_SECRET, { expiresIn: 86400 });
 
     res.status(200).send({
       id: user._id,

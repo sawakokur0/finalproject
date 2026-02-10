@@ -1,14 +1,12 @@
 const db = require("../models");
 const Class = db.class;
 
-// Public: Get all classes
 exports.findAll = (req, res) => {
   Class.find()
     .then(data => res.send(data))
     .catch(err => res.status(500).send({ message: err.message || "Error occurred." }));
 };
 
-// Admin Only: Create Class
 exports.create = (req, res) => {
   if (!req.body.title) {
     return res.status(400).send({ message: "Content can not be empty!" });
@@ -26,11 +24,9 @@ exports.create = (req, res) => {
     .catch(err => res.status(500).send({ message: err.message }));
 };
 
-// Admin Only: Delete Class
 exports.delete = (req, res) => {
   const id = req.params.id;
   
-  // В Mongoose 8+ findByIdAndRemove удален, используем findByIdAndDelete
   Class.findByIdAndDelete(id)
     .then(data => {
       if (!data) res.status(404).send({ message: `Cannot delete Class with id=${id}.` });

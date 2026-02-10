@@ -1,43 +1,76 @@
-// auth.js - Логика авторизации и работы с API
-
 const API_BASE_URL = "http://localhost:8080/api";
 
-// --- 1. ПРОВЕРКА СТАТУСА ПРИ ЗАГРУЗКЕ ---
 document.addEventListener("DOMContentLoaded", () => {
     const userStr = localStorage.getItem("user");
     const user = userStr ? JSON.parse(userStr) : null;
 
     if (user && user.accessToken) {
-        // Пользователь вошел
         $("#nav-login, #nav-signup").addClass("d-none");
         $("#nav-profile, #nav-logout").removeClass("d-none");
         
-        // Если мы на странице профиля, заполняем данные
         if (window.location.pathname.includes("profile.html")) {
             $("#profile-welcome").text(`Welcome, ${user.username}!`);
-            $("#profile-name").text(user.username);
             $("#profile-email").text(user.email);
+            
+            $("#profile-name-input").val(user.username);
+            
             loadMyBookings(user.accessToken);
+
+            $("#update-name-btn").off("click").on("click", async () => {
+                const newName = $("#profile-name-input").val().trim();
+                
+                $("#update-message").empty();
+
+                if (!newName) {
+                    $("#update-message").html('<div class="alert alert-warning">Username cannot be empty</div>');
+                    return;
+                }
+
+                try {
+                    const response = await fetch(`${API_BASE_URL}/users/profile`, {
+                        method: "PUT",
+                        headers: { 
+                            "Content-Type": "application/json",
+                            "x-access-token": user.accessToken 
+                        },
+                        body: JSON.stringify({ username: newName })
+                    });
+                    
+                    const data = await response.json();
+                    
+                    if (response.ok) {
+                        user.username = newName;
+                        localStorage.setItem("user", JSON.stringify(user));
+                        
+                        $("#profile-welcome").text(`Welcome, ${newName}!`);
+                        
+                        $("#update-message").html('<div class="alert alert-success">Name updated successfully!</div>');
+                        
+                        setTimeout(() => $("#update-message").empty(), 3000);
+                    } else {
+                        $("#update-message").html(`<div class="alert alert-danger">${data.message || "Update failed"}</div>`);
+                    }
+                } catch (error) {
+                    console.error("Error updating profile:", error);
+                    $("#update-message").html('<div class="alert alert-danger">Server connection error</div>');
+                }
+            });
         }
     } else {
-        // Гость
         $("#nav-login, #nav-signup").removeClass("d-none");
         $("#nav-profile, #nav-logout").addClass("d-none");
         
-        // Если неавторизованный пытается зайти в профиль
         if (window.location.pathname.includes("profile.html")) {
             window.location.href = "login.html";
         }
     }
 
-    // Обработчик кнопки выхода
     $("#nav-logout, #profile-logout-btn").on("click", (e) => {
         e.preventDefault();
         logout();
     });
 });
 
-// --- 2. РЕГИСТРАЦИЯ ---
 $("#signup-form").on("submit", async function(e) {
     e.preventDefault();
     
@@ -45,7 +78,6 @@ $("#signup-form").on("submit", async function(e) {
     const email = $("#signup-email").val();
     const password = $("#signup-password").val();
 
-    // Очистка сообщений
     $("#signup-error").addClass("d-none");
     $("#signup-success").addClass("d-none");
 
@@ -70,7 +102,6 @@ $("#signup-form").on("submit", async function(e) {
     }
 });
 
-// --- 3. ВХОД (LOGIN) ---
 $("#login-form").on("submit", async function(e) {
     e.preventDefault();
 
@@ -89,7 +120,6 @@ $("#login-form").on("submit", async function(e) {
         const data = await response.json();
 
         if (response.ok) {
-            // Сохраняем пользователя и токен
             localStorage.setItem("user", JSON.stringify(data));
             window.location.href = "profile.html";
         } else {
@@ -101,13 +131,11 @@ $("#login-form").on("submit", async function(e) {
     }
 });
 
-// --- 4. ВЫХОД ---
 function logout() {
     localStorage.removeItem("user");
     window.location.href = "index.html";
 }
 
-// --- 5. ЗАГРУЗКА БРОНИРОВАНИЙ (Для профиля) ---
 async function loadMyBookings(token) {
     try {
         const response = await fetch(`${API_BASE_URL}/users/bookings`, {
@@ -116,7 +144,7 @@ async function loadMyBookings(token) {
         });
         
         const bookings = await response.json();
-        const container = $("#my-bookings-list"); // Убедитесь, что этот ID есть в profile.html
+        const container = $("#my-bookings-list");
         
         if (container.length) {
             container.empty();
@@ -126,7 +154,6 @@ async function loadMyBookings(token) {
             }
 
             bookings.forEach(b => {
-                // Проверка на удаленный класс
                 if(!b.class) return; 
 
                 const date = new Date(b.class.date).toLocaleString();
@@ -144,5 +171,6 @@ async function loadMyBookings(token) {
         }
     } catch (error) {
         console.error("Error fetching bookings:", error);
+        $("#my-bookings-list").html('<li class="list-group-item text-danger">Error loading bookings</li>');
     }
 }

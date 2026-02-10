@@ -1,4 +1,4 @@
-const dbConfig = require("../config/db.config.js"); // <-- ВОТ ЭТОЙ СТРОКИ НЕ ХВАТАЛО
+const dbConfig = require("../config/db.config.js");
 
 const mongoose = require("mongoose");
 mongoose.Promise = global.Promise;

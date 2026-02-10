@@ -1,12 +1,9 @@
-// script.js - Основной скрипт интерфейса и расписания
-
 const API_CLASSES_URL = "http://localhost:8080/api/classes";
 const API_BOOKING_URL = "http://localhost:8080/api/bookings";
 
 $(document).ready(function () {
     console.log("jQuery is ready!");
 
-    // --- DARK/LIGHT MODE ---
     const themeToggleButton = $('#theme-toggle');
     const body = $('body');
 
@@ -34,18 +31,15 @@ $(document).ready(function () {
 
     applyInitialTheme();
 
-    // --- LOAD DYNAMIC SCHEDULE (NEW FUNCTION) ---
-    // Если мы на странице расписания, загружаем данные из БД
     if ($("#dynamic-schedule-body").length) {
         loadSchedule();
     }
 
-    // --- DYNAMIC TRAINERS LIST (Static for now as DB doesn't have trainers API) ---
     const trainers = [
-        { id: 1, name: 'Anna', specialty: 'Yoga Instructor', bio: 'Certified yoga teacher...', img: 'images/5413438310036140376.jpg', alt: 'Trainer Anna' },
-        { id: 2, name: 'Alina', specialty: 'Fitness Coach', bio: 'Specialist in functional training...', img: 'images/5413438310036140384.jpg', alt: 'Trainer Alina' },
-        { id: 3, name: 'Sarah', specialty: 'Pilates Instructor', bio: 'Certified Pilates instructor...', img: 'images/5413438310036140377.jpg', alt: 'Trainer Sarah' },
-        { id: 4, name: 'Maria', specialty: 'Strength Coach', bio: 'Strength and conditioning...', img: 'images/5413438310036140381.jpg', alt: 'Trainer Maria' }
+        { id: 1, name: 'Anna', specialty: 'Yoga Instructor', bio: 'Certified yoga teacher.', img: 'images/5413438310036140376.jpg', alt: 'Trainer Anna' },
+        { id: 2, name: 'Alina', specialty: 'Fitness Coach', bio: 'Specialist in functional training.', img: 'images/5413438310036140384.jpg', alt: 'Trainer Alina' },
+        { id: 3, name: 'Sarah', specialty: 'Pilates Instructor', bio: 'Certified Pilates instructor.', img: 'images/5413438310036140377.jpg', alt: 'Trainer Sarah' },
+        { id: 4, name: 'Maria', specialty: 'Strength Coach', bio: 'Strength and conditioning.', img: 'images/5413438310036140381.jpg', alt: 'Trainer Maria' }
     ];
 
     const trainersGrid = $('#trainers-grid');
@@ -67,17 +61,13 @@ $(document).ready(function () {
         trainersGrid.html(trainersHTML);
     }
 
-    // --- CONTACT FORM HANDLING (Visual only) ---
     $('#contact-form').on('submit', function (e) {
         e.preventDefault();
-        // ... (Ваша старая логика валидации) ...
         alert("Message sent (Demo)");
     });
 });
 
-// --- API FUNCTIONS ---
 
-// 1. Загрузка расписания
 async function loadSchedule() {
     try {
         const response = await fetch(API_CLASSES_URL);
@@ -121,7 +111,6 @@ async function loadSchedule() {
     }
 }
 
-// 2. Бронирование класса
 window.bookClass = async function(classId) {
     const userStr = localStorage.getItem("user");
     if (!userStr) {
@@ -146,7 +135,7 @@ window.bookClass = async function(classId) {
 
         if (response.ok) {
             alert("Booking successful!");
-            loadSchedule(); // Обновить таблицу (уменьшить кол-во мест)
+            loadSchedule();
         } else {
             alert(data.message || "Booking failed");
         }
