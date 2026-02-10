@@ -18,7 +18,6 @@ document.addEventListener("DOMContentLoaded", () => {
 
             $("#update-name-btn").off("click").on("click", async () => {
                 const newName = $("#profile-name-input").val().trim();
-                
                 $("#update-message").empty();
 
                 if (!newName) {
@@ -41,11 +40,8 @@ document.addEventListener("DOMContentLoaded", () => {
                     if (response.ok) {
                         user.username = newName;
                         localStorage.setItem("user", JSON.stringify(user));
-                        
                         $("#profile-welcome").text(`Welcome, ${newName}!`);
-                        
                         $("#update-message").html('<div class="alert alert-success">Name updated successfully!</div>');
-                        
                         setTimeout(() => $("#update-message").empty(), 3000);
                     } else {
                         $("#update-message").html(`<div class="alert alert-danger">${data.message || "Update failed"}</div>`);
@@ -73,7 +69,6 @@ document.addEventListener("DOMContentLoaded", () => {
 
 $("#signup-form").on("submit", async function(e) {
     e.preventDefault();
-    
     const username = $("#signup-name").val();
     const email = $("#signup-email").val();
     const password = $("#signup-password").val();
@@ -87,9 +82,7 @@ $("#signup-form").on("submit", async function(e) {
             headers: { "Content-Type": "application/json" },
             body: JSON.stringify({ username, email, password })
         });
-
         const data = await response.json();
-
         if (response.ok) {
             $("#signup-success").text(data.message).removeClass("d-none");
             setTimeout(() => window.location.href = "login.html", 2000);
@@ -97,14 +90,12 @@ $("#signup-form").on("submit", async function(e) {
             $("#signup-error").text(data.message || "Error occurred").removeClass("d-none");
         }
     } catch (error) {
-        console.error("Error:", error);
         $("#signup-error").text("Server connection failed").removeClass("d-none");
     }
 });
 
 $("#login-form").on("submit", async function(e) {
     e.preventDefault();
-
     const email = $("#login-email").val();
     const password = $("#login-password").val();
 
@@ -116,9 +107,7 @@ $("#login-form").on("submit", async function(e) {
             headers: { "Content-Type": "application/json" },
             body: JSON.stringify({ email, password })
         });
-
         const data = await response.json();
-
         if (response.ok) {
             localStorage.setItem("user", JSON.stringify(data));
             window.location.href = "profile.html";
@@ -126,7 +115,6 @@ $("#login-form").on("submit", async function(e) {
             $("#login-error").text(data.message || "Invalid credentials").removeClass("d-none");
         }
     } catch (error) {
-        console.error("Error:", error);
         $("#login-error").text("Server connection failed").removeClass("d-none");
     }
 });
@@ -157,6 +145,7 @@ async function loadMyBookings(token) {
                 if(!b.class) return; 
 
                 const date = new Date(b.class.date).toLocaleString();
+                
                 container.append(`
                     <li class="list-group-item d-flex justify-content-between align-items-center">
                         <div>
@@ -164,9 +153,34 @@ async function loadMyBookings(token) {
                             <br>
                             <small class="text-muted">${date}</small>
                         </div>
-                        <span class="badge bg-success rounded-pill">Active</span>
+                        <div>
+                            <span class="badge bg-success rounded-pill me-2">Active</span>
+                            <button class="btn btn-sm btn-outline-danger cancel-btn" data-id="${b._id}">Cancel</button>
+                        </div>
                     </li>
                 `);
+            });
+
+            $(".cancel-btn").on("click", async function() {
+                const bookingId = $(this).data("id");
+                if(!confirm("Are you sure you want to cancel this booking?")) return;
+
+                try {
+                    const res = await fetch(`${API_BASE_URL}/bookings/${bookingId}`, {
+                        method: "DELETE",
+                        headers: { "x-access-token": token }
+                    });
+                    
+                    if (res.ok) {
+                        alert("Booking cancelled.");
+                        loadMyBookings(token); 
+                    } else {
+                        alert("Failed to cancel booking.");
+                    }
+                } catch (err) {
+                    console.error(err);
+                    alert("Error connecting to server.");
+                }
             });
         }
     } catch (error) {
